@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shared Shopping List DApp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fc;
+        margin: 0;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .input-group {
+        margin-bottom: 10px;
+      }
+      input,
+      select {
+        padding: 10px;
+        width: 100%;
+        margin-top: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .list-items {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Shared Shopping List</h1>
+      <div id="wallet-address">
+        <button id="connectWalletBtn">Connect Wallet</button>
+      </div>
+
+      <div id="create-list-section" style="display: none">
+        <h2>Create a Shopping List</h2>
+        <div class="input-group">
+          <label for="listName">List Name</label>
+          <input type="text" id="listName" placeholder="Enter list name" />
+        </div>
+        <div class="input-group">
+          <label for="members"
+            >Add Members (Comma separated ETH addresses)</label
+          >
+          <input
+            type="text"
+            id="members"
+            placeholder="Enter Ethereum addresses"
+          />
+        </div>
+        <button id="createListBtn">Create Shopping List</button>
+      </div>
+
+      <div id="add-item-section" style="display: none">
+        <h2>Add Item to Shopping List</h2>
+        <div class="input-group">
+          <label for="listId">List ID</label>
+          <input type="number" id="listId" placeholder="Enter list ID" />
+        </div>
+        <div class="input-group">
+          <label for="itemName">Item Name</label>
+          <input type="text" id="itemName" placeholder="Enter item name" />
+        </div>
+        <div class="input-group">
+          <label for="itemQuantity">Quantity</label>
+          <input
+            type="number"
+            id="itemQuantity"
+            placeholder="Enter item quantity"
+          />
+        </div>
+        <button id="addItemBtn">Add Item</button>
+      </div>
+
+      <div id="view-list-section" style="display: none">
+        <h2>View Items in List</h2>
+        <div class="input-group">
+          <label for="viewListId">List ID</label>
+          <input type="number" id="viewListId" placeholder="Enter list ID" />
+        </div>
+        <button id="viewListBtn">View Items</button>
+        <div id="listItems" class="list-items"></div>
+      </div>
+    </div>
+
+    <script>
+      // Connect to Web3 and the smart contract
+      const web3 = new Web3(window.ethereum);
+      let contract;
+      let currentAccount;
+      const contractAddress = "0x726fB922217d156d7056dF94f77C9A07249C279A";
+      const contractABI = [
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "itemName",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "quantity",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "addedBy",
+              type: "address",
+            },
+          ],
+          name: "ItemAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "listName",
+              type: "string",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "creator",
+              type: "address",
+            },
+          ],
+          name: "ShoppingListCreated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_itemName",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "_quantity",
+              type: "uint256",
+            },
+          ],
+          name: "addItemToList",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_listName",
+              type: "string",
+            },
+            {
+              internalType: "address[]",
+              name: "_members",
+              type: "address[]",
+            },
+          ],
+          name: "createShoppingList",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listId",
+              type: "uint256",
+            },
+          ],
+          name: "getListItems",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "name",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "quantity",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "addedBy",
+                  type: "address",
+                },
+                {
+                  internalType: "bool",
+                  name: "isPurchased",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct SharedShoppingList.ListItem[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "listAccess",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "sharedLists",
+          outputs: [
+            {
+              internalType: "string",
+              name: "listName",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "itemCount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
+
+      // Elements
+      const connectWalletBtn = document.getElementById("connectWalletBtn");
+      const createListBtn = document.getElementById("createListBtn");
+      const addItemBtn = document.getElementById("addItemBtn");
+      const viewListBtn = document.getElementById("viewListBtn");
+      const listNameInput = document.getElementById("listName");
+      const membersInput = document.getElementById("members");
+      const listIdInput = document.getElementById("listId");
+      const itemNameInput = document.getElementById("itemName");
+      const itemQuantityInput = document.getElementById("itemQuantity");
+      const viewListIdInput = document.getElementById("viewListId");
+      const listItemsContainer = document.getElementById("listItems");
+
+      // Enable Ethereum wallet connection
+      async function connectWallet() {
+        const accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        currentAccount = accounts[0];
+        document.getElementById(
+          "wallet-address"
+        ).innerText = `Connected: ${currentAccount}`;
+        connectWalletBtn.style.display = "none";
+        document.getElementById("create-list-section").style.display = "block";
+        document.getElementById("add-item-section").style.display = "block";
+        document.getElementById("view-list-section").style.display = "block";
+        contract = new web3.eth.Contract(contractABI, contractAddress);
+      }
+
+      connectWalletBtn.addEventListener("click", connectWallet);
+
+      // Create shopping list
+      async function createShoppingList() {
+        const listName = listNameInput.value;
+        const members = membersInput.value
+          .split(",")
+          .map((addr) => addr.trim());
+
+        if (!listName || members.length === 0) {
+          alert("List name and members are required.");
+          return;
+        }
+
+        await contract.methods
+          .createShoppingList(listName, members)
+          .send({ from: currentAccount });
+        alert("Shopping List Created!");
+      }
+
+      createListBtn.addEventListener("click", createShoppingList);
+
+      // Add item to shopping list
+      async function addItemToList() {
+        const listId = parseInt(listIdInput.value);
+        const itemName = itemNameInput.value;
+        const itemQuantity = parseInt(itemQuantityInput.value);
+
+        if (!itemName || itemQuantity <= 0) {
+          alert("Item name and quantity are required.");
+          return;
+        }
+
+        await contract.methods
+          .addItemToList(listId, itemName, itemQuantity)
+          .send({ from: currentAccount });
+        alert("Item Added to List!");
+      }
+
+      addItemBtn.addEventListener("click", addItemToList);
+
+      // View items in a list
+      async function viewListItems() {
+        const listId = parseInt(viewListIdInput.value);
+        const items = await contract.methods.getListItems(listId).call();
+        listItemsContainer.innerHTML = "";
+        if (items.length === 0) {
+          listItemsContainer.innerHTML = "<p>No items in this list.</p>";
+          return;
+        }
+
+        items.forEach((item) => {
+          const itemElement = document.createElement("div");
+          itemElement.innerHTML = `
+                    <p><strong>Item:</strong> ${
+                      item.name
+                    } <br> <strong>Quantity:</strong> ${
+            item.quantity
+          } <br> <strong>Added By:</strong> ${
+            item.addedBy
+          } <br> <strong>Purchased:</strong> ${
+            item.isPurchased ? "Yes" : "No"
+          }</p>
+                    <hr>
+                `;
+          listItemsContainer.appendChild(itemElement);
+        });
+      }
+
+      viewListBtn.addEventListener("click", viewListItems);
+    </script>
+  </body>
+</html>

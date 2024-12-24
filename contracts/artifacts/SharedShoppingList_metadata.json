@@ -1,0 +1,238 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "listId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "itemName",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "quantity",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "addedBy",
+						"type": "address"
+					}
+				],
+				"name": "ItemAdded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "listId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "listName",
+						"type": "string"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "creator",
+						"type": "address"
+					}
+				],
+				"name": "ShoppingListCreated",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_listId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "_itemName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_quantity",
+						"type": "uint256"
+					}
+				],
+				"name": "addItemToList",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_listName",
+						"type": "string"
+					},
+					{
+						"internalType": "address[]",
+						"name": "_members",
+						"type": "address[]"
+					}
+				],
+				"name": "createShoppingList",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_listId",
+						"type": "uint256"
+					}
+				],
+				"name": "getListItems",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "quantity",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "addedBy",
+								"type": "address"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPurchased",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct SharedShoppingList.ListItem[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "listAccess",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "sharedLists",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "listName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "itemCount",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"project-04/contracts/contract.sol": "SharedShoppingList"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"project-04/contracts/contract.sol": {
+			"keccak256": "0xa76cb3f6e9ded56208b9e86c6efd2a93f688c44d9f06a7ee7045dbe673e3d5ef",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://85a8e4bd1140f9962df329079b9c122671ce05fd651a056c269f3a6c4d4267c2",
+				"dweb:/ipfs/QmQWf8NwE8raMkZesmWqChKCiTkCRaFcNNZFrPmHnZxKkU"
+			]
+		}
+	},
+	"version": 1
+}
